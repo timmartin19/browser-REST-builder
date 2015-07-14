@@ -19,11 +19,21 @@ class User(db.Model):
 class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     model_name = db.Column(db.String(length=31), nullable=False)
-    links = db.relationship('Relationship', backref='relation')
-    relationships = db.relationship('Relationship', backref='relation')
+    links = db.relationship('Relationship', backref='resource')
 
 
 class Relationship(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(length=63), nullable=False)
-    relation_id = db.Column(db.Integer, db.ForeignKey('relation.id'))
+    resource_id = db.Column(db.Integer, db.ForeignKey('resource.id'))
+
+
+class FlaskSQLAlchemySessionHandler(object):
+    @staticmethod
+    def get_session(self):
+        return db.session
+
+    @staticmethod
+    def handle_session(session, exc=None):
+        if exc:
+            session.rollback()

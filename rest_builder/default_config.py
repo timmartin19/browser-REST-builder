@@ -1,2 +1,2 @@
 DEBUG = True
-SQLALCHEMY_URI = 'sqlite:///restbuilder.sqlite'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///restbuilder.sqlite'

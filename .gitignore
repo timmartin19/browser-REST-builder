@@ -62,3 +62,6 @@ target/
 
 # SQLite
 *.sqlite
+
+# pypi shit
+setup.cfg

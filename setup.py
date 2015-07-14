@@ -29,8 +29,8 @@ setup(
     description='A browser based client for building and visualizing REST API\'s with ripozo.',
     include_package_data=True,
     install_requires=[
+        'Flask-Migrate',
         'Flask-SQLAlchemy',
-        'alembic',
         'click',
         'flask-ripozo',
         'ripozo-sqlalchemy',
