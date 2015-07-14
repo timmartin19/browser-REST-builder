@@ -34,7 +34,7 @@ def setup_db(app=None, manager=None):
 
 
 def register_resources(app):
-    dispatcher = FlaskDispatcher(app)
+    dispatcher = FlaskDispatcher(app, url_prefix='/api')
     dispatcher.register_resources(UserResource, RelationshipResource, ResourceResource)
 
 
