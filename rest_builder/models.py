@@ -5,12 +5,30 @@ from __future__ import unicode_literals
 
 from flask_sqlalchemy import SQLAlchemy
 
-from ripozo import Relationship, ListRelationship
-from ripozo_sqlalchemy import AlchemyManager
+from ripozo import Relationship, ListRelationship, restmixins
+from ripozo.resources.constructor import ResourceMetaClass
+from ripozo_sqlalchemy import AlchemyManager, ScopedSessionHandler
+
+from .databases import get_database_session
 
 import ujson
 
 db = SQLAlchemy()
+
+_RESTMIXINS_MAP = {
+    'Create': restmixins.Create,
+    'Retrieve': restmixins.Retrieve,
+    'RetrieveList': restmixins.RetrieveList,
+    'RetrieveRetrieveList': restmixins.RetrieveRetrieveList,
+    'Update': restmixins.Update,
+    'Delete': restmixins.Delete,
+    'RetrieveUpdate': restmixins.RetrieveUpdate,
+    'RetrieveUpdateDelete': restmixins.RetrieveUpdateDelete,
+    'CreateRetrieve': restmixins.CreateRetrieveUpdate,
+    'CreateRetrieveUpdate': restmixins.CreateRetrieveUpdate,
+    'CRUD': restmixins.CRUD,
+    'CRUDL': restmixins.CRUDL,
+}
 
 
 class User(db.Model):
@@ -28,6 +46,7 @@ class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     links = db.relationship('RelationshipModel')
     relationships = db.relationship('RelationshipModel')
+    restmixin = db.Enum(*_RESTMIXINS_MAP.keys(), default='CRUDL')
     manager_id = db.Column(db.Integer, db.ForeignKey('manager.id'), nullable=True)
     manager = db.relationship('Manager', backref='resources')
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -42,6 +61,14 @@ class Resource(db.Model):
         self._pks = ujson.dumps(value)
 
     @property
+    def resource_name(self):
+        return '{0}{1}'.format(self.owner.username, self.manager.name)
+
+    @property
+    def restmixin_class(self):
+        return _RESTMIXINS_MAP[self.restmixin]
+
+    @property
     def resource(self):
         """
         :return: The ResourceBase subclass
@@ -49,9 +76,15 @@ class Resource(db.Model):
         :rtype: ripozo.ResourceBase
         """
         links = [rel.relationship for rel in self.links]
-        relationship = [rel.relationship for rel in self.relationships]
-        
-        raise NotImplementedError
+        relationships = [rel.relationship for rel in self.relationships]
+        namespace = '/{0}'.format(self.owner.username)
+        manager_class = self.manager.manager
+        session = get_database_session(self.owner)
+        session_handler = ScopedSessionHandler(session)
+        manager = manager_class(session_handler)
+        attr_dict = dict(manager=manager, _links=links,
+                         _relationships=relationships, namespace=namespace)
+        return ResourceMetaClass(self.resource_name, (self.restmixin_class,), attr_dict)
 
 
 class RelationshipModel(db.Model):
