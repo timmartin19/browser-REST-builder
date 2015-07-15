@@ -34,6 +34,7 @@ setup(
         'click',
         'flask-ripozo',
         'ripozo-sqlalchemy',
+        'ujson',
     ],
     keywords='REST HATEOAS Hypermedia RESTful web API browser visualization',
     name='browser-rest-builder',

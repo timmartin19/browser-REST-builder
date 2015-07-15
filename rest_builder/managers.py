@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from ripozo_sqlalchemy import AlchemyManager
 
-from .models import Resource, Relationship, User
+from .models import Manager, Resource, Relationship, User, db
 
 
 class UserManager(AlchemyManager):
@@ -25,3 +25,21 @@ class RelationshipManager(AlchemyManager):
     create_fields = ('name', 'resource_id',)
     update_fields = ('name', 'resource_id',)
     model = Relationship
+
+
+class ManagerManager(AlchemyManager):
+    fields = ('id', 'name', 'resources.id')
+    create_fields = ('name', 'resources.id')
+    update_fields = ('name', 'resources.id')
+    model = Manager
+
+
+class FlaskSQLAlchemySessionHandler(object):
+    @staticmethod
+    def get_session(self):
+        return db.session
+
+    @staticmethod
+    def handle_session(session, exc=None):
+        if exc:
+            session.rollback()

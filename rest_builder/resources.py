@@ -5,8 +5,8 @@ from __future__ import unicode_literals
 
 from ripozo import restmixins
 
-from .managers import UserManager, RelationshipManager, ResourceManager
-from .models import db, FlaskSQLAlchemySessionHandler
+from .managers import (UserManager, RelationshipManager, ResourceManager,
+                       FlaskSQLAlchemySessionHandler,)
 
 
 class UserResource(restmixins.CRUDL):
