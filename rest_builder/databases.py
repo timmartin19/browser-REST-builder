@@ -43,4 +43,5 @@ def get_declarative_base(user):
         base = automap_base()
         base.prepare(engine, reflect=True)
         _BASES[user.database_uri] = base
-    return _BASES[user.database_uri]
+    base = _BASES[user.database_uri]
+    return base
