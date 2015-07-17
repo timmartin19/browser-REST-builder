@@ -9,7 +9,8 @@ from ripozo import Relationship, ListRelationship, restmixins
 from ripozo.resources.constructor import ResourceMetaClass
 from ripozo_sqlalchemy import AlchemyManager, ScopedSessionHandler
 
-from .databases import get_database_session
+from .databases import get_declarative_base
+from .exceptions import MissingModelException
 
 import ujson
 
@@ -40,6 +41,7 @@ class User(db.Model):
     resources = db.relationship('Resource', backref='owner')
     relationships = db.relationship('RelationshipModel', backref='owner')
     managers = db.relationship('Manager', backref='owner')
+
 
 
 class Resource(db.Model):
@@ -200,4 +202,8 @@ class Manager(db.Model):
 
     @property
     def model(self):
-        raise NotImplementedError
+        base = get_declarative_base(self.owner)
+        if hasattr(base.classes, self.model_name):
+            return getattr(base.classes, self.model_name)
+        raise MissingModelException("The table with the name {0} does"
+                                    "not exist in your database".format(self.model_name))
