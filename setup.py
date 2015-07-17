@@ -39,7 +39,7 @@ setup(
     keywords='REST HATEOAS Hypermedia RESTful web API browser visualization',
     name='browser-rest-builder',
     packages=find_packages(exclude=['rest_builder_tests', 'rest_builder_tests.*']),
-    test_requires=[
+    tests_require=[
         'mock',
         'tox',
         'unittest2',

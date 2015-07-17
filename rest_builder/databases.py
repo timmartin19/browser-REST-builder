@@ -22,11 +22,11 @@ def get_database_engine(user):
         to the user's database.
     :rtype: sqlalchemy.Engine
     """
-    if user.id not in _ENGINES:
-        user_database = 'sqlite:///{0}_user.db'.format(user.id)
+    if user.database_uri not in _ENGINES:
+        user_database = user.database_uri
         engine = create_engine(user_database)
-        _ENGINES[user.id] = engine
-    engine = _ENGINES[user.id]
+        _ENGINES[user.database_uri] = engine
+    engine = _ENGINES[user.database_uri]
     return engine
 
 
@@ -39,8 +39,8 @@ def get_declarative_base(user):
     :rtype: sqlalchemy.ext.declarative.Base
     """
     engine = get_database_engine(user)
-    if user.id not in _BASES:
+    if user.database_uri not in _BASES:
         base = automap_base()
         base.prepare(engine, reflect=True)
-        _BASES[user.id] = base
-    return _BASES[user.id]
+        _BASES[user.database_uri] = base
+    return _BASES[user.database_uri]

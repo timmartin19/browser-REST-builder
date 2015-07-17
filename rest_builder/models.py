@@ -9,7 +9,7 @@ from ripozo import Relationship, ListRelationship, restmixins
 from ripozo.resources.constructor import ResourceMetaClass
 from ripozo_sqlalchemy import AlchemyManager, ScopedSessionHandler
 
-from .databases import get_declarative_base
+from .databases import get_declarative_base, get_database_engine
 from .exceptions import MissingModelException
 
 import ujson
@@ -37,22 +37,27 @@ class User(db.Model):
     username = db.Column(db.String(length=31), unique=True)
     password = db.Column(db.String(length=63), nullable=False)
     email = db.Column(db.String(length=63), nullable=True)
-    database_uri = db.Column(db.String, nullable=False)
+    database_uri = db.Column(db.String, nullable=False, unique=True)
     resources = db.relationship('Resource', backref='owner')
     relationships = db.relationship('RelationshipModel', backref='owner')
     managers = db.relationship('Manager', backref='owner')
-
 
 
 class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     links = db.relationship('RelationshipModel')
     relationships = db.relationship('RelationshipModel')
-    restmixin = db.Enum(*_RESTMIXINS_MAP.keys(), default='CRUDL')
+    restmixin = db.Enum(*_RESTMIXINS_MAP.keys())
     manager_id = db.Column(db.Integer, db.ForeignKey('manager.id'), nullable=True)
     manager = db.relationship('Manager', backref='resources')
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     _pks = db.Column(db.Text, default='[]')
+
+    def __init__(self, *args, **kwargs):
+        # TODO docs
+        super(Resource, self).__init__(*args, **kwargs)
+        if not self.restmixin:
+            self.restmixin = 'CRUDL'
 
     @property
     def pks(self):
@@ -81,7 +86,7 @@ class Resource(db.Model):
         relationships = [rel.relationship for rel in self.relationships]
         namespace = '/{0}'.format(self.owner.username)
         manager_class = self.manager.manager
-        session = get_database_session(self.owner)
+        session = get_database_engine(self.owner)
         session_handler = ScopedSessionHandler(session)
         manager = manager_class(session_handler)
         attr_dict = dict(manager=manager, _links=links,
