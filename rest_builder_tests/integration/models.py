@@ -13,6 +13,7 @@ from rest_builder.databases import _ENGINES
 from sqlalchemy import create_engine, Column, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 import unittest2
 
@@ -89,11 +90,14 @@ class TestModelConstruction(unittest2.TestCase):
         """
         with self.app.app_context():
             user, = self.db.session.query(User).filter_by(username='user').all()
-            man_model = ManagerModel(model_name='blah', owner=user)
+            man_model = ManagerModel(model_name='blah', owner=user, fields=('id',))
             manager = man_model.manager
-            self.assertTupleEqual(manager.fields, ())
-            self.assertTupleEqual(manager.create_fields, ())
-            self.assertTupleEqual(manager.list_fields, ())
-            self.assertTupleEqual(manager.update_fields, ())
+            self.assertListEqual(manager.fields, ['id'])
+            self.assertListEqual(manager.create_fields, ['id'])
+            self.assertListEqual(manager.list_fields, ['id'])
+            self.assertListEqual(manager.update_fields, ['id'])
             manager_instance = manager(ScopedSessionHandler(self.engine))
             self.assertIsInstance(manager_instance, AlchemyManager)
+            blah_record = manager_instance.create({})
+            blah_instance = Session(self.engine).query(self.model).get(blah_record.values())
+            self.assertIsInstance(blah_instance, self.model)
