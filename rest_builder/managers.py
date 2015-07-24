@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 from ripozo_sqlalchemy import AlchemyManager
 
-from .models import Manager, Resource, Relationship, User, db
+from .models import ManagerModel, ResourceModel, Relationship, User, db
 
 
 class UserManager(AlchemyManager):
@@ -17,7 +17,7 @@ class ResourceManager(AlchemyManager):
     fields = ('id', 'model_name', 'links.id',)
     create_fields = ('model_name',)
     update_fields = ('model_name', 'links.id',)
-    model = Resource
+    model = ResourceModel
 
 
 class RelationshipManager(AlchemyManager):
@@ -31,7 +31,7 @@ class ManagerManager(AlchemyManager):
     fields = ('id', 'name', 'resources.id')
     create_fields = ('name', 'resources.id')
     update_fields = ('name', 'resources.id')
-    model = Manager
+    model = ManagerModel
 
 
 class FlaskSQLAlchemySessionHandler(object):

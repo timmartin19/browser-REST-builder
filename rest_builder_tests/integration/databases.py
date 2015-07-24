@@ -31,3 +31,11 @@ class TestDatabaseHelpers(unittest2.TestCase):
         self.assertIs(_ENGINES[self.uri], engine)
         engine2 = get_database_engine(user)
         self.assertIs(engine, engine2)
+
+    def test_get_declarative_base(self):
+        user = mock.Mock(database_uri='sqlite:///:memory:')
+        base = get_declarative_base(user)
+        self.assertIn(self.uri, _BASES)
+        self.assertIs(_BASES[self.uri], base)
+        base2 = get_declarative_base(user)
+        self.assertIs(base, base2)

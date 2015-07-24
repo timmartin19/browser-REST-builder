@@ -38,24 +38,24 @@ class User(db.Model):
     password = db.Column(db.String(length=63), nullable=False)
     email = db.Column(db.String(length=63), nullable=True)
     database_uri = db.Column(db.String, nullable=False, unique=True)
-    resources = db.relationship('Resource', backref='owner')
+    resources = db.relationship('ResourceModel', backref='owner')
     relationships = db.relationship('RelationshipModel', backref='owner')
-    managers = db.relationship('Manager', backref='owner')
+    managers = db.relationship('ManagerModel', backref='owner')
 
 
-class Resource(db.Model):
+class ResourceModel(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     links = db.relationship('RelationshipModel')
     relationships = db.relationship('RelationshipModel')
     restmixin = db.Enum(*_RESTMIXINS_MAP.keys())
-    manager_id = db.Column(db.Integer, db.ForeignKey('manager.id'), nullable=True)
-    manager = db.relationship('Manager', backref='resources')
+    manager_id = db.Column(db.Integer, db.ForeignKey('manager_model.id'), nullable=True)
+    manager = db.relationship('ManagerModel', backref='resources')
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     _pks = db.Column(db.Text, default='[]')
 
     def __init__(self, *args, **kwargs):
         # TODO docs
-        super(Resource, self).__init__(*args, **kwargs)
+        super(ResourceModel, self).__init__(*args, **kwargs)
         if not self.restmixin:
             self.restmixin = 'CRUDL'
 
@@ -105,12 +105,12 @@ class RelationshipModel(db.Model):
     _property_map = db.Column(db.Text, default='{}')
     relation = db.Column(db.String, nullable=False)
     required = db.Column(db.Integer, default=False)
-    resource_id = db.Column(db.Integer, db.ForeignKey('resource.id'))
+    resource_id = db.Column(db.Integer, db.ForeignKey('resource_model.id'))
     templated = db.Column(db.Boolean, default=False)
 
     @property
     def query_args(self):
-        return ujson.loads(self._query_args)
+        return ujson.loads(self._query_args or '[]')
 
     @query_args.setter
     def query_args(self, value):
@@ -118,7 +118,7 @@ class RelationshipModel(db.Model):
 
     @property
     def property_map(self):
-        return ujson.loads(self._property_map)
+        return ujson.loads(self._property_map or '{}')
 
     @property_map.setter
     def property_map(self, value):
@@ -140,7 +140,7 @@ class RelationshipModel(db.Model):
                      query_args=self.query_args, templated=self.templated)
 
 
-class Manager(db.Model):
+class ManagerModel(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     model_name = db.Column(db.String(length=31), nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -152,7 +152,7 @@ class Manager(db.Model):
 
     @property
     def fields(self):
-        return ujson.loads(self._fields)
+        return ujson.loads(self._fields or '[]')
 
     @fields.setter
     def fields(self, value):
@@ -160,7 +160,7 @@ class Manager(db.Model):
 
     @property
     def create_fields(self):
-        return ujson.loads(self._create_fields)
+        return ujson.loads(self._create_fields or '[]')
 
     @create_fields.setter
     def create_fields(self, value):
@@ -168,7 +168,7 @@ class Manager(db.Model):
 
     @property
     def update_fields(self):
-        return ujson.loads(self._update_fields)
+        return ujson.loads(self._update_fields or '[]')
 
     @update_fields.setter
     def update_fields(self, value):
@@ -176,7 +176,7 @@ class Manager(db.Model):
 
     @property
     def list_fields(self):
-        return ujson.loads(self._list_fields)
+        return ujson.loads(self._list_fields or '[]')
 
     @list_fields.setter
     def list_fields(self, value):
@@ -199,7 +199,7 @@ class Manager(db.Model):
             attr_dict['update_fields'] = self.update_fields
         if self.list_fields:
             attr_dict['list_fields'] = self.list_fields
-        return type(self.name, AlchemyManager, attr_dict)
+        return type(self.name, (AlchemyManager,), attr_dict)
 
     @property
     def name(self):
@@ -210,5 +210,5 @@ class Manager(db.Model):
         base = get_declarative_base(self.owner)
         if hasattr(base.classes, self.model_name):
             return getattr(base.classes, self.model_name)
-        raise MissingModelException("The table with the name {0} does"
+        raise MissingModelException("The table with the name {0} does "
                                     "not exist in your database".format(self.model_name))
