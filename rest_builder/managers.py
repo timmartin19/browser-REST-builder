@@ -3,14 +3,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from flask.ext.user import current_user
 from ripozo_sqlalchemy import AlchemyManager
 
 from .models import ManagerModel, ResourceModel, Relationship, User, db
 
 
-# class UserFilteredManager(AlchemyManager):
-#     def queryset(self, session):
-#         return db.session.query(self.model).filter_by(owner=)
+class UserFilteredManager(AlchemyManager):
+    def queryset(self, session):
+        return db.session.query(self.model).filter_by(owner=current_user)
 
 
 class UserManager(AlchemyManager):
@@ -18,21 +19,21 @@ class UserManager(AlchemyManager):
     model = User
 
 
-class ResourceManager(AlchemyManager):
+class ResourceManager(UserFilteredManager):
     fields = ('id', 'model_name', 'links.id',)
     create_fields = ('model_name',)
     update_fields = ('model_name', 'links.id',)
     model = ResourceModel
 
 
-class RelationshipManager(AlchemyManager):
+class RelationshipManager(UserFilteredManager):
     fields = ('id', 'name', 'resource_id',)
     create_fields = ('name', 'resource_id',)
     update_fields = ('name', 'resource_id',)
     model = Relationship
 
 
-class ManagerManager(AlchemyManager):
+class ManagerManager(UserFilteredManager):
     fields = ('id', 'name', 'resources.id')
     create_fields = ('name', 'resources.id')
     update_fields = ('name', 'resources.id')
