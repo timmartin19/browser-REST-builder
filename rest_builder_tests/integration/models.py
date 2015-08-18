@@ -4,11 +4,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from flask import Flask
-from ripozo import Relationship, ListRelationship, ResourceBase
+from ripozo import Relationship, ListRelationship, ResourceBase, RequestContainer, restmixins
+from ripozo.resources.constructor import ResourceMetaClass
 from ripozo_sqlalchemy import ScopedSessionHandler, AlchemyManager
 
 from rest_builder.models import db, RelationshipModel, ResourceModel, ManagerModel, User
-from rest_builder.databases import _ENGINES
+from rest_builder.databases import _ENGINES, get_database_engine
 
 from sqlalchemy import create_engine, Column, Integer
 from sqlalchemy.ext.declarative import declarative_base
@@ -89,7 +90,7 @@ class TestModelConstruction(unittest2.TestCase):
         Tests a simple Manager construction
         """
         with self.app.app_context():
-            user, = self.db.session.query(User).filter_by(username='user').all()
+            user = self.db.session.query(User).filter_by(username='user').first()
             man_model = ManagerModel(model_name='blah', owner=user, fields=('id',))
             manager = man_model.manager
             self.assertListEqual(manager.fields, ['id'])
@@ -101,3 +102,24 @@ class TestModelConstruction(unittest2.TestCase):
             blah_record = manager_instance.create({})
             blah_instance = Session(self.engine).query(self.model).get(blah_record.values())
             self.assertIsInstance(blah_instance, self.model)
+
+    def test_resource_construction(self):
+        """Simple Resource construction"""
+        with self.app.app_context():
+            user = self.db.session.query(User).filter_by(username='user').first()
+            man_model = ManagerModel(model_name='blah', owner=user, fields=('id',))
+            self.db.session.add(man_model)
+            self.db.session.commit()
+            res = ResourceModel(restmixin='CRUDL', manager=man_model, owner=user)
+            res.pks = ['id']
+            resource_class = res.resource
+            self.assertEqual(restmixins.CRUDL, res.restmixin_class)
+            self.assertIsInstance(resource_class, ResourceMetaClass)
+            req = RequestContainer()
+            resource_instance = resource_class.create(req)
+            self.assertIsInstance(resource_instance, resource_class)
+            id_ = resource_instance.properties['id']
+            engine = get_database_engine(user)
+            session = ScopedSessionHandler(engine).get_session()
+            model = session.query(self.model).get(id_)
+            self.assertIsNotNone(model)
