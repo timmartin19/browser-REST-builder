@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from flask_sqlalchemy import SQLAlchemy
+from flask_user import UserMixin
 
 from ripozo import Relationship, ListRelationship, restmixins
 from ripozo.resources.constructor import ResourceMetaClass
@@ -32,7 +33,7 @@ _RESTMIXINS_MAP = {
 }
 
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(length=31), unique=True)
     password = db.Column(db.String(length=63), nullable=False)

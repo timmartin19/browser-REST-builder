@@ -8,6 +8,11 @@ from ripozo_sqlalchemy import AlchemyManager
 from .models import ManagerModel, ResourceModel, Relationship, User, db
 
 
+# class UserFilteredManager(AlchemyManager):
+#     def queryset(self, session):
+#         return db.session.query(self.model).filter_by(owner=)
+
+
 class UserManager(AlchemyManager):
     fields = ('id', 'username', 'email', 'database_uri')
     model = User

@@ -31,6 +31,7 @@ setup(
     install_requires=[
         'Flask-Migrate',
         'Flask-SQLAlchemy',
+        'Flask-User',
         'click',
         'flask-ripozo',
         'ripozo-sqlalchemy',
