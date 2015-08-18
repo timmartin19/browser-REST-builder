@@ -22,7 +22,7 @@ def create_app(config=None):
     migrate = setup_db(app=app, manager=manager)
     register_resources(app)
     db_adapter = SQLAlchemyAdapter(db, User)
-    user_manager = UserMa(db_adapter, app)
+    user_manager = UserManager(db_adapter, app)
     return app, migrate, manager
 
 
