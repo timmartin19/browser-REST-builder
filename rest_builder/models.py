@@ -56,7 +56,7 @@ class ResourceModel(db.Model):
     def __init__(self, *args, **kwargs):
         # TODO docs
         super(ResourceModel, self).__init__(*args, **kwargs)
-        if not self.restmixin:
+        if not isinstance(self.restmixin, str):
             self.restmixin = 'CRUDL'
 
     @property
