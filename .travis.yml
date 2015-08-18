@@ -6,6 +6,6 @@ install:
   - pip install coveralls
   - python setup.py -q install
 script:
-  -coverage run --source=rest_builder setup.py test
+  - coverage run --source=rest_builder setup.py test
 after_success:
   - coveralls
