@@ -123,3 +123,5 @@ class TestModelConstruction(unittest2.TestCase):
             session = ScopedSessionHandler(engine).get_session()
             model = session.query(self.model).get(id_)
             self.assertIsNotNone(model)
+            self.assertListEqual(res.pks, ['id'])
+            self.assertEqual(res._pks, '["id"]')
