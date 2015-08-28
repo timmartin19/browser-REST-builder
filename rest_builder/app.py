@@ -16,7 +16,7 @@ import click
 
 
 def create_app(config=None):
-    app = Flask(__name__)
+    app = Flask('rest_builder')
     app.config.from_pyfile(config)
     manager = Manager(app)
     migrate = setup_db(app=app, manager=manager)

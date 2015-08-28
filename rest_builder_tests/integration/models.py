@@ -9,7 +9,7 @@ from ripozo.resources.constructor import ResourceMetaClass
 from ripozo_sqlalchemy import ScopedSessionHandler, AlchemyManager
 
 from rest_builder.models import db, RelationshipModel, ResourceModel, ManagerModel, User
-from rest_builder.databases import _ENGINES, get_database_engine
+from rest_builder.databases import _ENGINES, _BASES, get_database_engine
 
 from sqlalchemy import create_engine, Column, Integer
 from sqlalchemy.ext.declarative import declarative_base
@@ -27,6 +27,8 @@ class TestModelConstruction(unittest2.TestCase):
     Resources, and Managers are properly constructed.
     """
     def setUp(self):
+        _ENGINES.clear()
+        _BASES.clear()
         app = Flask(__name__)
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.sqlite'
         db.init_app(app)
