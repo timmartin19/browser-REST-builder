@@ -34,6 +34,7 @@ setup(
         'Flask-User',
         'click',
         'flask-ripozo',
+        'ripozo>=1.1.0',
         'ripozo-sqlalchemy',
         'ujson',
     ],

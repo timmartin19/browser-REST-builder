@@ -7,16 +7,15 @@ from flask import Flask
 from ripozo import Relationship, ListRelationship, ResourceBase, RequestContainer, restmixins
 from ripozo.resources.constructor import ResourceMetaClass
 from ripozo_sqlalchemy import ScopedSessionHandler, AlchemyManager
-
-from rest_builder.models import db, RelationshipModel, ResourceModel, ManagerModel, User
-from rest_builder.databases import _ENGINES, _BASES, get_database_engine
-
 from sqlalchemy import create_engine, Column, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-
 import unittest2
+
+from rest_builder.exceptions import MissingModelException
+from rest_builder.models import db, RelationshipModel, ResourceModel, ManagerModel, User
+from rest_builder.databases import _ENGINES, _BASES, get_database_engine
 
 
 class TestModelConstruction(unittest2.TestCase):
@@ -127,3 +126,25 @@ class TestModelConstruction(unittest2.TestCase):
             self.assertIsNotNone(model)
             self.assertListEqual(res.pks, ['id'])
             self.assertEqual(res._pks, '["id"]')
+
+    def test_manager_missing_model(self):
+        """When the model on a manager doesn't exist"""
+        with self.app.app_context():
+            owner = self.db.session.query(User).filter_by(username='user').first()
+            manager_model = ManagerModel(model_name='not_real', owner=owner)
+            self.assertRaises(MissingModelException, getattr, manager_model, 'model')
+
+    def test_manager_class(self):
+        """
+        Tests the creation of fields, create_fields etc
+        attributes on ManagerModel.manager property
+        """
+        with self.app.app_context():
+            owner = self.db.session.query(User).filter_by(username='user').first()
+            man = ManagerModel(_fields="[1]", _create_fields="[2]", model_name='blah',
+                               _list_fields="[3]", _update_fields="[4]", owner=owner)
+            manager = man.manager
+            self.assertListEqual([1], manager.fields)
+            self.assertListEqual([2], manager.create_fields)
+            self.assertListEqual([3], manager.list_fields)
+            self.assertListEqual([4], manager.update_fields)
